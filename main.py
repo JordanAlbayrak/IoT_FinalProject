@@ -1,6 +1,11 @@
 import hmac
 import hashlib
 import json
+import sys
+import schedule
+import os
+from dotenv import load_dotenv
+
 import requests
 from time import sleep, time
 import board
@@ -8,6 +13,9 @@ import adafruit_dht
 
 import requests
 from datetime import datetime
+
+load_dotenv()
+API_KEY = os.environ.get('SECRET')
 
 sensor = adafruit_dht.DHT22(board.D17)
 headerHTTP = {'Content-Type': 'application/json'}
@@ -56,7 +64,7 @@ def post_humidity():
     payload = {'taken_at': get_current_time(), 'humidity': get_humidity()}
     response = requests.Request('POST', url, json=payload, headers=headerHTTP)
     prepared = response.prepare()
-    signature = hmac.new('d66e56d4c0d6184396d1d99614183850b7a9cd79'.encode(), json.dumps(payload).encode(),
+    signature = hmac.new(API_KEY.encode(), json.dumps(payload).encode(),
                          hashlib.sha256).hexdigest()
     prepared.headers['X-Auth-Signature'] = signature
     # print(json.dumps(payload))
@@ -67,18 +75,25 @@ def post_humidity():
 
 
 def post_stats():
+    print("Posting Stats...")
+    sleep(3)
     post_temperature()
     post_humidity()
+    sleep(3)
 
 
-try:
-    while 1:
-        print("Posting Stats...")
-        post_temperature()
-        post_humidity()
-        sleep(1200)
+schedule.every(1).minutes.do(post_stats)
 
-except:
-    print("Unknown Error")
-    print("Exiting")
-    exit()
+while True:
+    try:
+        schedule.run_pending()
+        sleep(1)
+
+    except Exception as ex:
+        if ex is BufferError:
+            print("Buffer Error")
+            quit()
+        else:
+            print(ex)
+            print("Restarting")
+            sleep(30)
