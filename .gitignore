@@ -1,5 +1,6 @@
 .idea/
 .env
 .venv/
+venv/
 Adafruit_Python_DHT/
 
