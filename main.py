@@ -1,12 +1,10 @@
 import hmac
 import hashlib
 import json
-import sys
 import schedule
 import os
 from dotenv import load_dotenv
 
-import requests
 from time import sleep, time
 import board
 import adafruit_dht
@@ -50,7 +48,6 @@ def login():
     return session_cookies.get("token")
 
 
-
 def post_temperature():
     # post temperature to server
     # check if url is reachable
@@ -92,20 +89,14 @@ def post_stats():
     post_humidity()
     sleep(3)
 
-schedule.every(440).minutes.do(login)
 schedule.every(5).minutes.do(post_stats)
-
+schedule.every().second.do(lambda: (post_stats(), schedule.CancelJob))
 
 while True:
 
-
-
     try:
-        # schedule.run_pending()
-        login()
-        sleep(3)
-        post_stats()
-        sleep(3)
+        schedule.run_pending()
+        sleep(2)
 
     except Exception as ex:
         if ex is BufferError:
