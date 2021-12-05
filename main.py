@@ -55,7 +55,7 @@ def post_temperature():
     payload = {'taken_at': get_current_time(), 'temperature': get_temperature(), }
     response = requests.Request('POST', url, json=payload, headers=headerHTTP, cookies={"token": login()})
     prepared = response.prepare()
-    signature = hmac.new('d66e56d4c0d6184396d1d99614183850b7a9cd79'.encode(), json.dumps(payload).encode(),
+    signature = hmac.new(API_KEY.encode(), json.dumps(payload).encode(),
                          hashlib.sha256).hexdigest()
     prepared.headers['X-Auth-Signature'] = signature
     # print(json.dumps(payload))
