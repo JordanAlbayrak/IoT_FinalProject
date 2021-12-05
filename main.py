@@ -16,6 +16,8 @@ from datetime import datetime
 
 load_dotenv()
 API_KEY = os.environ.get('SECRET')
+USERNAME = os.environ.get("USERNAME")
+PASSWORD = os.environ.get("PASSWORD")
 
 sensor = adafruit_dht.DHT22(board.D17)
 headerHTTP = {'Content-Type': 'application/json'}
@@ -40,12 +42,21 @@ def get_temp():  # done
     return response.json()
 
 
+def login():
+    url = 'https://iot-temphumid.herokuapp.com/login'
+    payload = {"username": USERNAME, "password": PASSWORD}
+    response = requests.post(url, json=payload, headers=headerHTTP)
+    session_cookies = response.cookies
+    return session_cookies.get("token")
+
+
+
 def post_temperature():
     # post temperature to server
     # check if url is reachable
     url = 'https://iot-temphumid.herokuapp.com/temperature'
     payload = {'taken_at': get_current_time(), 'temperature': get_temperature(), }
-    response = requests.Request('POST', url, json=payload, headers=headerHTTP)
+    response = requests.Request('POST', url, json=payload, headers=headerHTTP, cookies={"token": login()})
     prepared = response.prepare()
     signature = hmac.new('d66e56d4c0d6184396d1d99614183850b7a9cd79'.encode(), json.dumps(payload).encode(),
                          hashlib.sha256).hexdigest()
@@ -62,7 +73,7 @@ def post_humidity():
     # check if url is reachable
     url = 'https://iot-temphumid.herokuapp.com/humidity'
     payload = {'taken_at': get_current_time(), 'humidity': get_humidity()}
-    response = requests.Request('POST', url, json=payload, headers=headerHTTP)
+    response = requests.Request('POST', url, json=payload, headers=headerHTTP, cookies={"token": login()})
     prepared = response.prepare()
     signature = hmac.new(API_KEY.encode(), json.dumps(payload).encode(),
                          hashlib.sha256).hexdigest()
@@ -81,13 +92,20 @@ def post_stats():
     post_humidity()
     sleep(3)
 
+schedule.every(440).minutes.do(login)
+schedule.every(5).minutes.do(post_stats)
 
-schedule.every(1).minutes.do(post_stats)
 
 while True:
+
+
+
     try:
-        schedule.run_pending()
-        sleep(1)
+        # schedule.run_pending()
+        login()
+        sleep(3)
+        post_stats()
+        sleep(3)
 
     except Exception as ex:
         if ex is BufferError:
