@@ -153,6 +153,6 @@ while True:
         sleep(2)
 
     except Exception as ex:
-            print(ex)
-            print("Restarting")
-            sleep(30)
+        print(ex)
+        print("Restarting")
+        sleep(30)
