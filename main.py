@@ -153,10 +153,6 @@ while True:
         sleep(2)
 
     except Exception as ex:
-        if ex is BufferError:
-            print("Buffer Error")
-            quit()
-        else:
             print(ex)
             print("Restarting")
             sleep(30)
