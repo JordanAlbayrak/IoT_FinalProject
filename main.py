@@ -73,7 +73,9 @@ def post_temperature(payload):
     # print(signature)
     with requests.Session() as session:
         response = session.send(prepared)
-    # print(response.text)
+    print("_____________________________________________________________")
+    print("| Temperature: " + str(get_temperature()) + " | Date/Time: " + str(get_current_time()))
+    print("|")
 
 
 def post_humidity(payload):
@@ -89,7 +91,8 @@ def post_humidity(payload):
     # print(signature)
     with requests.Session() as session:
         response = session.send(prepared)
-    # print(response.text)
+    print("| Humidity: " + str(get_humidity()) + "    | Date/Time: " + str(get_current_time()))
+    print("|____________________________________________________________")
 
 
 @sio.on('disconnect')
