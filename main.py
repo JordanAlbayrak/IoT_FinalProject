@@ -4,6 +4,7 @@ import json
 import schedule
 import os
 from dotenv import load_dotenv
+from contextlib import redirect_stdout
 
 from time import sleep, time
 import board
@@ -23,7 +24,6 @@ HOST = "https://iot-temphumid.herokuapp.com/"
 sio = socketio.Client()
 alive = False
 
-
 load_dotenv()
 API_KEY = os.environ.get('SECRET')
 USERNAME = os.environ.get("USERNAME")
@@ -31,6 +31,10 @@ PASSWORD = os.environ.get("PASSWORD")
 
 sensor = adafruit_dht.DHT22(board.D17)
 headerHTTP = {'Content-Type': 'application/json'}
+
+count = 0
+file_number = 0
+file = 'humiTemp_log'
 
 
 def get_current_time():
@@ -73,9 +77,29 @@ def post_temperature(payload):
     # print(signature)
     with requests.Session() as session:
         response = session.send(prepared)
-    print("_____________________________________________________________")
-    print("| Temperature: " + str(get_temperature()) + " | Date/Time: " + str(get_current_time()))
-    print("|")
+
+    global count
+    global file_number
+    global file
+
+    for line in open((file + '.txt')): count += 1
+    print(count)
+    print(file)
+    if count < 50000:
+        with open((file + '.txt'), 'a') as f:
+            with redirect_stdout(f):
+                print("_____________________________________________________________")
+                print("| Temperature: " + str(get_temperature()) + " | Date/Time: " + str(get_current_time()))
+                print("|")
+    else:
+        count = 0
+        file_number = file_number + 1
+        file = file + str(file_number)
+        with open((file + '.txt'), 'a') as f:
+            with redirect_stdout(f):
+                print("_____________________________________________________________")
+                print("| Temperature: " + str(get_temperature()) + " | Date/Time: " + str(get_current_time()))
+                print("|")
 
 
 def post_humidity(payload):
@@ -91,8 +115,27 @@ def post_humidity(payload):
     # print(signature)
     with requests.Session() as session:
         response = session.send(prepared)
-    print("| Humidity: " + str(get_humidity()) + "    | Date/Time: " + str(get_current_time()))
-    print("|____________________________________________________________")
+
+    global count
+    global file_number
+    global file
+
+    for line in open((file + '.txt')): count += 1
+    print(count)
+    print(file)
+    if count < 50000:
+        with open((file + '.txt'), 'a') as f:
+            with redirect_stdout(f):
+                print("| Humidity: " + str(get_humidity()) + "    | Date/Time: " + str(get_current_time()))
+                print("|____________________________________________________________")
+    else:
+        count = 0
+        file_number = file_number + 1
+        file = file + str(file_number)
+        with open((file + '.txt'), 'a') as f:
+            with redirect_stdout(f):
+                print("| Humidity: " + str(get_humidity()) + "    | Date/Time: " + str(get_current_time()))
+                print("|____________________________________________________________")
 
 
 @sio.on('disconnect')
